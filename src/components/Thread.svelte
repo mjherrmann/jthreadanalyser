@@ -9,9 +9,6 @@
   div {
     overflow: hidden;
   }
-  .file-thread:hover {
-    border: 2px solid green;
-  }
 </style>
 
 {#if thread}

@@ -100,7 +100,7 @@
     margin: 0 1em;
   }
   .thread-row:hover {
-    border: 1px solid blue;
+    border: 2px solid blue;
   }
 </style>
 
