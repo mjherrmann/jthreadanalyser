@@ -9,7 +9,7 @@ class FStore {
 	}
 
 	addFiles(files) {
-		this.update(() => files);
+		this.update((existingFiles) => [...existingFiles, ...files]);
 	}
 }
 

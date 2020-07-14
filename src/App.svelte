@@ -80,7 +80,6 @@
     display: flex;
     align-items: stretch;
     width: 100%;
-    margin: 2px;
   }
   .flex-child {
     overflow: hidden;
@@ -101,8 +100,9 @@
     margin: 0 1em;
   }
   .thread-row:hover {
-    margin: -1px;
-    border: 2px solid blue;
+    background-color: rgb(0, 0, 0, 0.2);
+    /* border-top: 2px solid blue;
+    border-bottom: 2px solid blue; */
   }
 </style>
 
