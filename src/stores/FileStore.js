@@ -8,14 +8,28 @@ class FStore {
 		this.update = update;
 	}
 
+	setProcessed(files) {
+		this.update((oldfiles) => {
+			let newFileMergeObj = files.reduce((reduced, file) => {
+				let oldFile = oldfiles[file.name];
+				let newFile = Object.assign(oldFile, { processed: true });
+				reduced[file.name] = newFile;
+				return reduced;
+			}, {});
+			return Object.assign({}, oldfiles, newFileMergeObj);
+		});
+	}
 	addFiles(files) {
 		this.update((existingFiles) => {
 			let filesObj = files.reduce((reduction, file) => {
-				reduction[file.name] = file;
+				if (!reduction[file.name]) {
+					reduction[file.name] = file;
+				}
 				return reduction;
 			}, {});
-			console.log(existingFiles, filesObj, Object.assign({}, existingFiles, filesObj));
-			return Object.assign({}, existingFiles, filesObj);
+			//existing comes last to avoid re-processing files which have already been loaded.
+			let nextSet = Object.assign({}, filesObj, existingFiles);
+			return nextSet;
 		});
 	}
 	remove(fileName) {
@@ -26,9 +40,6 @@ class FStore {
 					reduce[key] = value;
 					return reduce;
 				}, {});
-
-			console.log("delete", files, updatedFiles);
-
 			return updatedFiles;
 		});
 	}
