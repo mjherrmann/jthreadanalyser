@@ -11,6 +11,18 @@ class FStore {
 	addFiles(files) {
 		this.update((existingFiles) => [...existingFiles, ...files]);
 	}
+	remove(fileName) {
+		this.update((files) => {
+			console.log("update files", files);
+			let delIndex = files.findIndex((file) => {
+				console.log(file.name, fileName, file.name == fileName, file.name === fileName);
+				return file.name == fileName;
+			});
+			let deleted = files.splice(delIndex, 1);
+			console.log(files, deleted, delIndex);
+			return [...files];
+		});
+	}
 }
 
 export const FileStore = new FStore();

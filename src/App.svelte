@@ -1,6 +1,7 @@
 <script>
-  import { setContext, onMount, afterUpdate } from "svelte";
+  import { setContext, onMount, afterUpdate, beforeUpdate } from "svelte";
   import FileLoader from "./components/FileLoader.svelte";
+  import ClosableTab from "./components/ClosableTab.svelte";
   import Thread from "./components/Thread.svelte";
 
   import { FileStore } from "./stores/FileStore";
@@ -17,19 +18,31 @@
     }, {})
   ).sort(nameSort);
 
+  let threadSortExtract = threadName => {
+    let { groups } = /(?<name>.*?)(?<num>[\d]*)$/.exec(threadName);
+    return groups;
+  };
   let nameSort = (a, b) => {
-    let len = Math.min(a.length, b.length);
-    let a2 = a.padEnd(0, len - 1);
-    let b2 = b.slice(0, len - 1);
-
-    let sizeComp = a2.localeCompare(b2);
-    if (sizeComp == 0) {
-      if (a.length != b.length) {
-        return a.length - b.length;
+    let aExtract = threadSortExtract(a);
+    let bExtract = threadSortExtract(b);
+    if (aExtract.name) {
+      let nameCompare = aExtract.name.localeCompare(bExtract.name);
+      if (nameCompare == 0) {
+        let numa = parseInt(aExtract.num);
+        let numb = parseInt(bExtract.num);
+        if (numa === NaN && numb === NaN) {
+          return 0;
+        }
+        if (numa === NaN) {
+          return -1;
+        }
+        if (numb === NaN) {
+          return 1;
+        }
+        return numa - numb;
       }
-      return a.localeCompare(b);
-    } else {
-      return sizeComp;
+
+      return nameCompare;
     }
   };
 
@@ -48,22 +61,21 @@
       : "";
   };
   let main;
-  let flexWidth;
+  let mainSize = 100;
+  $: cellWidth = `${Math.floor(mainSize / (fileNames.length + 1)) - 1}px`;
 
-  let doResize = () => {
-    flexWidth = Math.floor(
-      main.getBoundingClientRect().width / (fileNames.length + 1)
-    );
+  let setMainSize = () => {
+    mainSize = main.getBoundingClientRect().width;
   };
 
-  onMount(() => {
-    doResize();
-  });
-  afterUpdate(() => {
-    doResize();
-  });
+  let closeTab = ({ detail }) => {
+    console.log("closeTab", detail);
+    FileStore.remove(detail);
+  };
 
-  window.onresize = doResize;
+  onMount(setMainSize);
+  afterUpdate(setMainSize);
+  window.onresize = setMainSize;
 </script>
 
 <style>
@@ -72,19 +84,6 @@
     font-size: 10pt;
   }
 
-  div {
-    width: 100%;
-  }
-
-  .flex-container {
-    display: flex;
-    align-items: stretch;
-    width: 100%;
-  }
-  .flex-child {
-    overflow: hidden;
-    padding: 1px;
-  }
   .main {
     width: 0px;
     align-items: stretch;
@@ -99,17 +98,30 @@
     width: 100% !important;
     margin: 0 1em;
   }
-  .thread-row:hover {
-    background-color: rgb(0, 0, 0, 0.2);
-    /* border-top: 2px solid blue;
-    border-bottom: 2px solid blue; */
+
+  .grid {
+    width: 100%;
+    display: grid;
+    grid-gap: 2px;
+  }
+  .flex-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+  .row-wrapper {
+    display: contents;
+  }
+  .row-wrapper:hover div {
+    background-color: rgb(0, 0, 0, 0.2) !important;
   }
 </style>
 
 <main>
-  <div class="flex-container {loaded ? 'filesloaded' : ''}">
+  <div class={loaded ? 'filesloaded flex-row' : ''}>
     <div class="sidebar">
-      <div class="state {loaded ? '' : 'flex-container'}">
+      <div class="state {loaded ? '' : 'flex-row'}">
         <div class="R">Running</div>
         <div class="CW">Waiting</div>
         <div class="B">Blocked</div>
@@ -120,24 +132,28 @@
       <FileLoader />
     </div>
     <div class="main" bind:this={main}>
-      <div class="fileNames flex-container">
-        <div class="flex-child" style="width: {flexWidth}px" />
+      <div
+        class="grid"
+        style="grid-template-columns: 200px repeat({fileNames.length}, {cellWidth});">
+
+        <div />
         {#each fileNames as fileName, index}
-          <div class="flex-child" style="width: {flexWidth}px">{fileName}</div>
+          <ClosableTab
+            eventName="closeTab"
+            identifier={fileName}
+            on:closeTab={closeTab}>
+            <span slot="content">{fileName}</span>
+          </ClosableTab>
+        {/each}
+        {#each threadNames as threadName}
+          <div class="row-wrapper">
+            <div style="overflow:hidden;">{threadName}</div>
+            {#each fileNames as fileName, index}
+              <Thread thread={getThread(fileName, threadName)} />
+            {/each}
+          </div>
         {/each}
       </div>
-      {#each threadNames as threadName, index}
-        <div class="flex-container thread-row">
-          <div class="flex-child" style="width: {flexWidth}px">
-            {threadName}
-          </div>
-          {#each fileNames as fileName, index}
-            <Thread
-              thread={getThread(fileName, threadName)}
-              maxWidth={flexWidth} />
-          {/each}
-        </div>
-      {/each}
     </div>
   </div>
 </main>

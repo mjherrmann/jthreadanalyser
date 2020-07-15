@@ -1,7 +1,6 @@
 {
 	"name": "jthreadanalyser",
 	"version": "1.0.0",
-	"homepage": "http://mjherrmann.github.io/jthreadanalyser",
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -c -w",
