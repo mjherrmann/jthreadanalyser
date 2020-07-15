@@ -2,7 +2,7 @@
   import { setContext, onMount, afterUpdate, beforeUpdate } from "svelte";
   import FileLoader from "./components/FileLoader.svelte";
   import ClosableTab from "./components/ClosableTab.svelte";
-  import Thread from "./components/Thread.svelte";
+  import ThreadRow from "./components/ThreadRow.svelte";
 
   import { FileStore } from "./stores/FileStore";
   import { ThreadStore } from "./stores/ThreadStore";
@@ -48,6 +48,14 @@
 
   $: threads = $ThreadStore;
 
+  let getThreads = threadName => {
+    let ts = fileNames.map(fileName => {
+      return threads[fileName] && threads[fileName][threadName];
+    });
+    console.log(ts);
+    return ts;
+  };
+
   let getThread = (fileName, threadName) => {
     return threads[fileName] && threads[fileName][threadName]
       ? threads[fileName][threadName]
@@ -73,7 +81,7 @@
     FileStore.remove(detail);
     ThreadStore.remove(detail);
   };
-
+  //let showThreadDetails = threadName => {};
   onMount(setMainSize);
   afterUpdate(setMainSize);
   window.onresize = setMainSize;
@@ -111,12 +119,6 @@
     justify-content: flex-start;
     align-items: flex-start;
   }
-  .row-wrapper {
-    display: contents;
-  }
-  .row-wrapper:hover div {
-    background-color: rgb(0, 0, 0, 0.2) !important;
-  }
 </style>
 
 <main>
@@ -146,13 +148,8 @@
             <span slot="content">{fileName}</span>
           </ClosableTab>
         {/each}
-        {#each threadNames as threadName}
-          <div class="row-wrapper">
-            <div style="overflow:hidden;">{threadName}</div>
-            {#each fileNames as fileName, index}
-              <Thread thread={getThread(fileName, threadName)} />
-            {/each}
-          </div>
+        {#each threadNames as threadname}
+          <ThreadRow threadName={threadname} threads={getThreads(threadname)} />
         {/each}
       </div>
     </div>
