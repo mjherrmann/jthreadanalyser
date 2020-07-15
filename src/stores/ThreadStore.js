@@ -13,11 +13,7 @@ class TStore {
 			let newFSThreads = {};
 			let newThread = {};
 			newThread[thread.name] = thread;
-			newFSThreads[fsFile.name] = Object.assign(
-				{},
-				oldThreadStore[fsFile.name],
-				newThread
-			);
+			newFSThreads[fsFile.name] = Object.assign({}, oldThreadStore[fsFile.name], newThread);
 			if (oldThreadStore[fsFile.name]) {
 				updatedThread = Object.assign({}, oldThreadStore, newFSThreads);
 			} else {
@@ -25,6 +21,17 @@ class TStore {
 			}
 
 			return updatedThread;
+		});
+	}
+	remove(fileName) {
+		this.update((oldThreadStore) => {
+			let updatedFiles = Object.entries(oldThreadStore)
+				.filter(([key, value]) => key != fileName)
+				.reduce((reduce, [key, value]) => {
+					reduce[key] = value;
+					return reduce;
+				}, {});
+			return updatedFiles;
 		});
 	}
 }

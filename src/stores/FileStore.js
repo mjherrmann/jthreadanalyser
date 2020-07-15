@@ -2,25 +2,34 @@ import { writable } from "svelte/store";
 
 class FStore {
 	constructor() {
-		const { subscribe, set, update } = writable([]);
+		const { subscribe, set, update } = writable({});
 		this.subscribe = subscribe;
 		this.set = set;
 		this.update = update;
 	}
 
 	addFiles(files) {
-		this.update((existingFiles) => [...existingFiles, ...files]);
+		this.update((existingFiles) => {
+			let filesObj = files.reduce((reduction, file) => {
+				reduction[file.name] = file;
+				return reduction;
+			}, {});
+			console.log(existingFiles, filesObj, Object.assign({}, existingFiles, filesObj));
+			return Object.assign({}, existingFiles, filesObj);
+		});
 	}
 	remove(fileName) {
 		this.update((files) => {
-			console.log("update files", files);
-			let delIndex = files.findIndex((file) => {
-				console.log(file.name, fileName, file.name == fileName, file.name === fileName);
-				return file.name == fileName;
-			});
-			let deleted = files.splice(delIndex, 1);
-			console.log(files, deleted, delIndex);
-			return [...files];
+			let updatedFiles = Object.entries(files)
+				.filter(([key, value]) => key != fileName)
+				.reduce((reduce, [key, value]) => {
+					reduce[key] = value;
+					return reduce;
+				}, {});
+
+			console.log("delete", files, updatedFiles);
+
+			return updatedFiles;
 		});
 	}
 }

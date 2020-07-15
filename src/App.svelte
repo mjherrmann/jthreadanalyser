@@ -10,7 +10,7 @@
   export let services;
   setContext("services", services);
 
-  $: fileNames = $FileStore.map(file => file.name).sort();
+  $: fileNames = Object.keys($FileStore).sort();
   $: loaded = fileNames && fileNames.length > 0;
   $: threadNames = Object.keys(
     Object.entries($ThreadStore).reduce((reduced, [fileName, threads]) => {
@@ -71,6 +71,7 @@
   let closeTab = ({ detail }) => {
     console.log("closeTab", detail);
     FileStore.remove(detail);
+    ThreadStore.remove(detail);
   };
 
   onMount(setMainSize);

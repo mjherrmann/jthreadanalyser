@@ -12,7 +12,7 @@ const BUFFER_SIZE = 20 * 1024;
 export class JCoreProcessor {
 	constructor() {
 		FileStore.subscribe((files) => {
-			this.process(files);
+			this.process(Object.values(files));
 		});
 	}
 
@@ -25,13 +25,9 @@ export class JCoreProcessor {
 			this.processing = true;
 
 			let fsFilePromises = files.map(
-				async (file) =>
-					await new Promise((resolve, reject) =>
-						file.file(resolve, reject)
-					)
+				async (file) => await new Promise((resolve, reject) => file.file(resolve, reject))
 			);
 
-			console.time("global");
 			Promise.all(fsFilePromises)
 				.then((fsFiles) => {
 					return Promise.all(
@@ -51,11 +47,7 @@ export class JCoreProcessor {
 		let lockMonitorBuilder = new LockMonitorBuilder();
 
 		lineProcessor.subscribe(lineFilter);
-		lineFilter.subscribe(
-			threadBuilder,
-			deadLockBuilder,
-			lockMonitorBuilder
-		);
+		lineFilter.subscribe(threadBuilder, deadLockBuilder, lockMonitorBuilder);
 
 		let fileStream = fsFile.stream();
 		await fileStream.pipeTo(
