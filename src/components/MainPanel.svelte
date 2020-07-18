@@ -34,21 +34,29 @@
       return nameCompare;
     }
   };
-
+  let threadFilter = "";
+  let threadFilterChange = evt => {
+    threadFilter = evt.target.value;
+  };
   $: fileNames = $ThreadStore ? Object.keys($ThreadStore).sort() : [];
   $: threadNames = $ThreadStore
     ? Object.keys(
         Object.entries($ThreadStore).reduce((reduced, [fileName, threads]) => {
           return Object.assign({}, reduced, threads);
         }, {})
-      ).sort(nameSort)
+      )
+        .filter(
+          threadName =>
+            threadFilter === "" ||
+            threadName.toLowerCase().indexOf(threadFilter.toLowerCase()) >= 0
+        )
+        .sort(nameSort)
     : [];
 
   let getThreads = threadName => {
     let ts = fileNames.map(fileName => {
       return $ThreadStore[fileName] && $ThreadStore[fileName][threadName];
     });
-    console.log(ts);
     return ts;
   };
 
@@ -75,6 +83,10 @@
     display: grid;
     grid-column-gap: 1px;
   }
+  input {
+    width: 100%;
+    margin: 10px 0;
+  }
 </style>
 
 <div class="main" bind:this={main}>
@@ -82,7 +94,12 @@
     class="grid"
     style="grid-template-columns: 200px repeat({fileNames.length}, {cellWidth});">
 
-    <div />
+    <div style={fileNames.length > 0 ? '' : 'display:none;'}>
+      <input
+        value={threadFilter}
+        on:keyup={threadFilterChange}
+        placeholder="Thread Filter" />
+    </div>
     {#each fileNames as fileName, index}
       <ClosableTab
         eventName="closeTab"
