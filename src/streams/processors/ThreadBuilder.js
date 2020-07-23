@@ -22,7 +22,7 @@ export const THREAD_TYPES = Object.values(INT_THREAD_TYPES);
 export class ThreadBuilder extends PassThroughStream {
 	constructor() {
 		super("ThreadBuilder");
-		this.thread = undefined;
+		this.threadName = undefined;
 		this.started = false;
 	}
 	process(fsFile, { type, content }) {
@@ -36,6 +36,8 @@ export class ThreadBuilder extends PassThroughStream {
 		}
 		if (INT_THREAD_TYPES.END_THREADS === type && this.started) {
 			this.started = false;
+			delete this.threadName;
+			this.threadName = undefined;
 			console.log(`${this.name} - Build Threads End`);
 		}
 		// } catch (e) {
@@ -52,34 +54,34 @@ export class ThreadBuilder extends PassThroughStream {
 				if (result) {
 					let { groups } = result;
 					if (groups && groups.name) {
-						this.thread = new Thread(groups);
-						ThreadStore.addThread(fsFile, this.thread);
+						this.threadName = groups.name;
+						ThreadStore.updateThread(fsFile,{name:groups.name,info:groups})
 					}
 				} else {
-					this.thread = new Thread({ name: content });
-					ThreadStore.addThread(fsFile, this.thread);
+					ThreadStore.updateThread(fsFile,{ name: content })
 				}
 				break;
 			case INT_THREAD_TYPES.THREADINFO1:
 				result = THREADINFO1_EXTRACTOR.exec(content);
 				if (result) {
 					let { groups } = result;
-					this.thread.addThreadInfo1(groups);
+					ThreadStore.updateThread(fsFile,{ name: this.threadName, nativeInfo:groups })
 				}
 				break;
 			case INT_THREAD_TYPES.JAVALTHREAD:
 				result = JAVALTREAD_EXTRACTOR.exec(content);
 				if (result) {
 					let { groups } = result;
-					this.thread.addJavalThread(groups);
+					ThreadStore.updateThread(fsFile,{ name: this.threadName,javalThreadInfo:groups })
 				}
 				break;
 			case INT_THREAD_TYPES.STACKTRACE4:
 			case INT_THREAD_TYPES.STACKTRACE5:
-				this.thread.addToStack(content);
+				ThreadStore.updateThread(fsFile,{ name: this.threadName,stack:[content]})
+				//this.thread.addToStack(content);
 				break;
 			case INT_THREAD_TYPES.NATIVESTACK:
-				this.thread.addToNativeStack(content);
+				ThreadStore.updateThread(fsFile,{ name: this.threadName,nativeStack:[content] })
 				break;
 		}
 	}

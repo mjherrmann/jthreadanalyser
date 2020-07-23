@@ -1,23 +1,36 @@
 export class Thread {
-	constructor({ name, j9vmthread, j9thread, id, state, prio }) {
+	constructor() {
 		this.name = name;
-		this.state = state;
-		this.prio = prio;
-		this.j9vmthread = j9vmthread;
-		this.j9thread = j9thread;
-		this.id = id;
+		this.info = {};
+		this.javalThreadInfo = {}
+		this.nativeInfo = {}
 		this.stack = [];
 		this.nativeStack = [];
+		this.waitingOn = [];
+		this.blockedBy = [];
+		this.blocking = [];
 	}
 
+	addWaitingOn(threadName){
+		this.waitingOn.push(threadName);
+	}
+	addBlocking(threadName){
+		this.blocking.push(threadName);
+	}
+	addBlockedOn(threadName){
+		this.blockedBy.push(threadName);
+	}
+	addInfo(info){
+		this.info = info;
+	}
 	addToStack(stackinfo) {
 		this.stack.push(stackinfo);
 	}
 	addToNativeStack(stackinfo) {
 		this.nativeStack.push(stackinfo);
 	}
-	addJavalThread(javalThreadIfo) {
-		this.javalThreadIfo = javalThreadIfo;
+	addJavalThread(javalThreadInfo) {
+		this.javalThreadInfo = javalThreadInfo;
 	}
 	addThreadInfo1(nativeInfo) {
 		this.nativeInfo = nativeInfo;

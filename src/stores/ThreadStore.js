@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import { Thread } from "../types/Thread";
 
 class TStore {
 	constructor() {
@@ -7,22 +8,91 @@ class TStore {
 		this.set = set;
 		this.update = update;
 	}
-	addThread(fsFile, thread) {
-		this.update((oldThreadStore) => {
-			let updatedThread = {};
-			let newFSThreads = {};
-			let newThread = {};
-			newThread[thread.name] = thread;
-			newFSThreads[fsFile.name] = Object.assign({}, oldThreadStore[fsFile.name], newThread);
-			if (oldThreadStore[fsFile.name]) {
-				updatedThread = Object.assign({}, oldThreadStore, newFSThreads);
-			} else {
-				updatedThread = Object.assign({}, oldThreadStore, newFSThreads);
-			}
+	/**
+	 * this.name = name;
+		this.info = {};
+		this.stack = [];
+		this.nativeStack = [];
+		this.waitingOn = [];
+		this.blockedBy = [];
+		this.blocking = [];
 
-			return updatedThread;
+	 * @param {*} fsFile
+	 * @param {*} param1
+	 */
+	updateThread(fsFile, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,waitingOn,blockedBy,blocking}) {
+		this.update((oldThreadStore) => {
+
+			/*
+			{
+				"filename"{
+					"threadname":{
+						this.name = name; - no update
+						this.info = {}; - replace
+						this.javalThreadInfo = {}  - replace
+						this.nativeInfo = {} - replace
+						this.stack = [];  - append
+						this.nativeStack = []; - append
+						this.waitingOn = []; - append
+						this.blockedBy = []; - append
+						this.blocking = []; - append
+					}
+				}
+
+			}
+			*/
+			let newStore = {
+				...oldThreadStore,
+				[fsFile.name]:{
+					...(oldThreadStore[fsFile.name])? oldThreadStore[fsFile.name] : {},
+					[name]:{
+						...( oldThreadStore[fsFile.name] && oldThreadStore[fsFile.name][name])? oldThreadStore[fsFile.name][name] : {},
+						name,
+					}
+				}
+			};
+			let thread = newStore[fsFile.name][name];
+			if(info){
+
+				thread.info = {...thread.info, ...info}
+			}
+			if(javalThreadInfo){
+				thread.javalThreadInfo = {...thread.javalThreadInfo, ...javalThreadInfo}
+			}
+			if(nativeInfo){
+				thread.nativeInfo = {...thread.nativeInfo, ...nativeInfo}
+			}
+			if(stack){
+				thread.stack = [...(thread.stack)?thread.stack:[],...stack]
+			}
+			if(nativeStack){
+				thread.nativeStack = [...(thread.nativeStack)?thread.nativeStack:[],...nativeStack]
+			}
+			if(waitingOn){
+				thread.waitingOn = [...(thread.waitingOn)?thread.waitingOn:[],...waitingOn]
+			}
+			if(blockedBy){
+				thread.blockedBy = [...(thread.blockedBy)?thread.blockedBy:[],...blockedBy]
+			}
+			if(blocking){
+				thread.blocking = [...(thread.blocking)?thread.blocking:[],...blocking]
+			}
+			return newStore;
 		});
 	}
+
+
+	mergeThread(){
+
+	}
+	mergeThreadInfo(){}
+
+	mergeThreadStack(){}
+	mergeThreadNativeStack(){}
+	mergeThreadBlocking(){}
+	mergeThreadNativeStack(){}
+
+
 	remove(fileName) {
 		this.update((oldThreadStore) => {
 			let updatedFiles = Object.entries(oldThreadStore)
