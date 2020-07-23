@@ -2,7 +2,6 @@
   //import { FileStore } from "../stores/FileStore";
   export let thread;
 
-  console.log(thread, thread.info);
 </script>
 
 <style>

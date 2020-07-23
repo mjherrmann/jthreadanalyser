@@ -5,6 +5,7 @@ import { ThreadStore } from "../../stores/ThreadStore";
 const THREADINFO_EXTRACTOR = /\"(?<name>.*?)\"[\s,]*(?<j9vmthread>.*?),[\s,]*(?<j9thread>.*?),[\s,]*(?<id>.*?),[\s,]*state:(?<state>.*),[\s,]*prio=(?<prio>[\d]*)/;
 const THREADINFO1_EXTRACTOR = /.*?ID:(?<threadId>.*?),.*?priority:(?<priority>.*?),.*?policy:(?<policy>.*?),.*?vmstate:(?<vmstate>.*?),.*?flags:(?<flags>.*?)\)/;
 const JAVALTREAD_EXTRACTOR = /\(.*getId:(?<getId>.*?),.*?isDaemon:(?<isDaemon>.*?)\)/;
+
 const INT_THREAD_TYPES = {
 	THREADINFO: "3XMTHREADINFO",
 	JAVALTHREAD: "3XMJAVALTHREAD",
@@ -26,7 +27,6 @@ export class ThreadBuilder extends PassThroughStream {
 		this.started = false;
 	}
 	process(fsFile, { type, content }) {
-		// try {
 		if (this.started) {
 			this.buildThread(fsFile, type, content);
 		}
@@ -40,10 +40,6 @@ export class ThreadBuilder extends PassThroughStream {
 			this.threadName = undefined;
 			console.log(`${this.name} - Build Threads End`);
 		}
-		// } catch (e) {
-		// 	console.error(e);
-		// 	this.close();
-		// }
 	}
 
 	buildThread(fsFile, type, content) {

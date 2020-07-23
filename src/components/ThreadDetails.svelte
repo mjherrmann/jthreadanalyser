@@ -1,5 +1,6 @@
 <script>
   export let thread;
+
 </script>
 
 <style>
@@ -7,7 +8,7 @@
     font-weight: 800;
     border-bottom: 1px solid rgb(0, 0, 0, 0.2);
   }
-  .stack {
+  .stack, .blocking, .blocked, .waitingOn {
     padding: 2px;
     white-space: pre-line;
     overflow-wrap: break-word;
@@ -27,8 +28,20 @@
 		<div class="blocked">{thread.blockedBy.join('\n')}</div>
 	{/if}
 	{#if thread.waitingOn && thread.waitingOn.length > 0}
-	<div class="head">Blocked</div>
+	<div class="head">Blocked by</div>
     <div class="waitingOn">{thread.waitingOn.join('\n')}</div>
+	{/if}
+	{#if thread.monitor}
+		<div class="head">Monitoring</div>
+		<div class="blocked">
+		{#if thread.waitingOn && thread.waitingOn.length > 0 || thread.blockedBy && thread.blockedBy.length > 0}
+			waiting for lock on:{'\n'}
+		{/if}
+		{#if thread.blocking && thread.blocking.length > 0}
+			holding lock on:{'\n'}
+		{/if}
+		{ thread.monitor}
+		</div>
 	{/if}
 	{#if thread.stack && thread.stack.length > 0}
 		<div class="head">Java Stack</div>

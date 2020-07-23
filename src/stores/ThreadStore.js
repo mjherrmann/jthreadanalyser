@@ -20,7 +20,7 @@ class TStore {
 	 * @param {*} fsFile
 	 * @param {*} param1
 	 */
-	updateThread(fsFile, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,waitingOn,blockedBy,blocking}) {
+	updateThread(fsFile, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking}) {
 		this.update((oldThreadStore) => {
 
 			/*
@@ -36,6 +36,7 @@ class TStore {
 						this.waitingOn = []; - append
 						this.blockedBy = []; - append
 						this.blocking = []; - append
+						this.monitor = string - replace
 					}
 				}
 
@@ -52,8 +53,8 @@ class TStore {
 				}
 			};
 			let thread = newStore[fsFile.name][name];
-			if(info){
 
+			if(info){
 				thread.info = {...thread.info, ...info}
 			}
 			if(javalThreadInfo){
@@ -76,6 +77,9 @@ class TStore {
 			}
 			if(blocking){
 				thread.blocking = [...(thread.blocking)?thread.blocking:[],...blocking]
+			}
+			if(monitor){
+				thread.monitor = monitor;
 			}
 			return newStore;
 		});
