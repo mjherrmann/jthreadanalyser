@@ -1,5 +1,5 @@
 import { PassThroughStream } from "../PassThroughStream";
-import { ThreadStore } from "../../stores/ThreadStore";
+//import { ThreadStore } from "../../stores/ThreadStore";
 
 const MONOBJECT_EXTRACTOR = /(?<monitor>.*?):.*?owner\s\"(?<owner>.*?)\"/;
 const WAITER_EXTRACTOR = /\"(?<thread>.*?)\"\s\((?<threadId>.*?)\)/
@@ -31,10 +31,14 @@ export const LOCK_TYPES = [
 
 
 export class LockMonitorBuilder extends PassThroughStream {
-	constructor() {
+	constructor(eventPublisher) {
 		super("LockMonitorBuilder");
 		this.lkMonitorsStarted = false;
 		this.regMonitorsStarted = false;
+		this.sendEvent = eventPublisher;
+	}
+	updateThread(fsFile, message){
+		this.sendEvent({msg:"updateThread",data:{file:fsFile,body:message}})
 	}
 	process(fsFile, { type, content }) {
 			if (START_LOCKMON === type) {
@@ -75,7 +79,7 @@ export class LockMonitorBuilder extends PassThroughStream {
 					if (groups && groups.owner) {
 						this.monObj = groups;
 						let {owner, monitor} = groups
-						ThreadStore.updateThread(fsFile,{name:owner,monitor})
+						this.updateThread(fsFile,{name:owner,monitor})
 					}
 				}else{
 					delete this.monObj;
@@ -89,8 +93,8 @@ export class LockMonitorBuilder extends PassThroughStream {
 						let { groups } = result;
 						if (groups && groups.thread) {
 							let {thread, threadId} = groups;
-							ThreadStore.updateThread(fsFile,{ name: owner, blocking:[thread]})
-							ThreadStore.updateThread(fsFile,{ name: thread, waitingOn:[owner],monitor})
+							this.updateThread(fsFile,{ name: owner, blocking:[thread]})
+							this.updateThread(fsFile,{ name: thread, waitingOn:[owner],monitor})
 						}
 					}
 				}
@@ -102,8 +106,8 @@ export class LockMonitorBuilder extends PassThroughStream {
 						let { groups } = result;
 						if (groups && groups.thread) {
 							let {thread, threadId} = groups;
-							ThreadStore.updateThread(fsFile,{ name: this.monObj.owner, blocking:[thread] })
-							ThreadStore.updateThread(fsFile,{ name: thread, blockedBy:[owner] ,monitor})
+							this.updateThread(fsFile,{ name: this.monObj.owner, blocking:[thread] })
+							this.updateThread(fsFile,{ name: thread, blockedBy:[owner] ,monitor})
 						}
 					}
 				}

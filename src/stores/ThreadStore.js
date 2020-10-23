@@ -1,6 +1,8 @@
 import { writable } from "svelte/store";
 import { Thread } from "../types/Thread";
 
+
+
 class TStore {
 	constructor() {
 		const { subscribe, set, update } = writable({});
@@ -22,7 +24,7 @@ class TStore {
 	 */
 	updateThread(fsFile, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking}) {
 		this.update((oldThreadStore) => {
-
+			//console.log("update",{name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking})
 			/*
 			{
 				"filename"{

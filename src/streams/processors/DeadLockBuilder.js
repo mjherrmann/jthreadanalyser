@@ -15,10 +15,14 @@ export const DEAD_LOCK_TYPES = [
 ];
 
 export class DeadLockBuilder extends PassThroughStream {
-	constructor() {
+	constructor(eventPublisher) {
 		super("LockBuilder");
 		this.thread = {};
 		this.deadlockStarted = false;
+		this.sendEvent = eventPublisher;
+	}
+	updateThread(fsFile, message){
+		this.sendEvent({msg:"updateThread",data:{file:fsFile,body:message}})
 	}
 	process(fsFile, { type, content }) {
 		//try {

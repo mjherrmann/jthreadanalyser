@@ -10,7 +10,7 @@
 
 {#if thread}
   <div class="flex-child {thread.info && thread.info.state} file-thread" style="overflow:hidden">
-    {(thread.stack && thread.stack[0]) || (thread.nativeStack && thread.nativeStack[0])}
+    {(thread.stack && thread.stack[0]) || (thread.nativeStack && thread.nativeStack[0]) || 'Stack not parsed'}
   </div>
 {:else}
   <div class="flex-child" />

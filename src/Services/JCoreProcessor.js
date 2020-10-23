@@ -1,11 +1,13 @@
 import { getContext } from "svelte";
 import { FileStore } from "../stores/FileStore";
+import {ThreadStore} from "../stores/ThreadStore"
 import { LineProcessor } from "../streams/processors/LineProcessor";
 import { DeadLockBuilder } from "../streams/processors/DeadLockBuilder";
 import { LockMonitorBuilder } from "../streams/processors/LockMonitorBuilder";
 import { ThreadBuilder } from "../streams/processors/ThreadBuilder";
 import { LineFilter } from "../streams/processors/LineFilter";
 import { FileReadService } from "./FileReadService";
+import {ProcessorClient} from "../workers/ProcessorClient";
 
 const BUFFER_SIZE = 20 * 1024;
 
@@ -28,7 +30,11 @@ export class JCoreProcessor {
 					.then((fsFiles) => {
 						return Promise.all(
 							fsFiles.map((fsFile) => {
-								return this.processFile(fsFile);
+
+								let pc = new ProcessorClient(ThreadStore);
+								return pc.processFile(fsFile);
+
+								return this.processFile(fsF);
 							})
 						);
 					})
@@ -38,33 +44,7 @@ export class JCoreProcessor {
 			}
 		}
 	}
-	async processFile(fsFile) {
-		let lineProcessor = new LineProcessor();
-		let lineFilter = new LineFilter();
-		let threadBuilder = new ThreadBuilder();
-		let deadLockBuilder = new DeadLockBuilder();
-		let lockMonitorBuilder = new LockMonitorBuilder();
 
-		lineProcessor.subscribe(lineFilter);
-		lineFilter.subscribe(threadBuilder, deadLockBuilder, lockMonitorBuilder);
-
-		let fileStream = fsFile.stream();
-		await fileStream.pipeTo(
-			new WritableStream({
-				write: (value) => {
-					try {
-						lineProcessor.process(fsFile, value);
-					} catch (err) {
-						console.error(err);
-					}
-				},
-				close: () => {
-					console.log("File stream closed");
-				},
-				Abort: () => {},
-			})
-		);
-	}
 }
 
 //split the files to manageable chunks.

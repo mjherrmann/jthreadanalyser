@@ -6,7 +6,7 @@ import { terser } from 'rollup-plugin-terser';
 
 const production = !process.env.ROLLUP_WATCH;
 
-export default {
+export default [{
 	input: 'src/main.js',
 	output: {
 		sourcemap: true,
@@ -51,7 +51,17 @@ export default {
 	watch: {
 		clearScreen: false
 	}
-};
+},
+{
+	input: "src/workers/ProcessorWorker.js",
+	output: {
+		sourcemap: true,
+		format: 'iife',
+		name: 'processor',
+		file: 'public/build/worker_processor.js'
+	},
+}
+];
 
 function serve() {
 	let started = false;
