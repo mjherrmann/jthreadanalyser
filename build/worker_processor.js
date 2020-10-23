@@ -12,17 +12,10 @@
 				this.notify(...arguments);
 			} catch (err) {
 				console.error(err);
-				// try {
-				// 	this.subscribers.forEach((subscriber) => subscriber.error(err));
-				// } catch (e) {
 				throw err;
-				// }
 			}
 		}
 
-		// error(err) {
-		// 	this.subscribers.forEach((subscriber) => subscriber.error(result));
-		// }
 		notify() {
 			this.subscribers.forEach((subscriber) => {
 				return subscriber.process(...arguments);
@@ -41,7 +34,6 @@
 			this.dataArr = [];
 		}
 		process(fsFile, chunk) {
-			// try {
 			this.dataArr = this.dataArr.concat(Array.from(chunk));
 			let nextIndex = this.newLineIndex();
 			while (nextIndex != -1) {
@@ -50,10 +42,6 @@
 				this.notify(fsFile, decoded);
 				nextIndex = this.newLineIndex();
 			}
-			// } catch (e) {
-			// 	console.error("Error Reading", e);
-			// 	this.close();
-			// }
 		}
 		newLineIndex() {
 			return this.dataArr.findIndex((i) => i === 10 || i === 13);
@@ -74,7 +62,7 @@
 		END_DEADLOCK,
 	];
 
-	class DeadLockBuilder extends PassThroughStream {
+	class IBMDeadLockBuilder extends PassThroughStream {
 		constructor(eventPublisher) {
 			super("LockBuilder");
 			this.thread = {};
@@ -82,7 +70,7 @@
 			this.sendEvent = eventPublisher;
 		}
 		updateThread(fsFile, message){
-			this.sendEvent({msg:"updateThread",data:{file:fsFile,body:message}});
+			this.sendEvent({msg:"updateThread",data:{type:'IBM',file:fsFile,body:message}});
 		}
 		process(fsFile, { type, content }) {
 			//try {
@@ -132,7 +120,7 @@
 	];
 
 
-	class LockMonitorBuilder extends PassThroughStream {
+	class IBMLockMonitorBuilder extends PassThroughStream {
 		constructor(eventPublisher) {
 			super("LockMonitorBuilder");
 			this.lkMonitorsStarted = false;
@@ -140,7 +128,7 @@
 			this.sendEvent = eventPublisher;
 		}
 		updateThread(fsFile, message){
-			this.sendEvent({msg:"updateThread",data:{file:fsFile,body:message}});
+			this.sendEvent({msg:"updateThread",data:{type:'IBM',file:fsFile,body:message}});
 		}
 		process(fsFile, { type, content }) {
 				if (START_LOCKMON === type) {
@@ -261,7 +249,7 @@
 
 	const THREAD_TYPES = Object.values(INT_THREAD_TYPES);
 
-	class ThreadBuilder extends PassThroughStream {
+	class IBMThreadBuilder extends PassThroughStream {
 		constructor(eventPublisher) {
 			super("ThreadBuilder");
 			this.threadName = undefined;
@@ -271,10 +259,8 @@
 		}
 		updateThread(fsFile, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking}){
 			let thread = this.thread;
-			// console.log("thread", this.thread,this.thread.name,name,this.thread.name !== undefined && this.thread.name !== name);
 			if(this.thread.name !== name){
-				console.log("thread", this.thread);
-				this.sendEvent({msg:"updateThread",data:{file:fsFile,body:thread}});
+				this.sendEvent({msg:"updateThread",data:{type:'IBM',file:fsFile,body:thread}});
 				thread = {name:name};
 			}
 
@@ -369,7 +355,7 @@
 
 	const DESIRED_TYPES = [...THREAD_TYPES, ...LOCK_TYPES, ...DEAD_LOCK_TYPES];
 
-	class LineFilter extends PassThroughStream {
+	class IBMLineFilter extends PassThroughStream {
 		constructor() {
 			super("LineFilter");
 		}
@@ -390,6 +376,95 @@
 		}
 	}
 
+	class JTypeDetectorProcessor extends PassThroughStream{
+		constructor() {
+			super("JTypeDetectorProcessor");
+			this.processor = undefined;
+			this.ibm = new IbmThreadDumpProcessor();
+			this.openJDK = new OpenJdkThreadDumpProcessor();
+
+
+		}
+		process(fsFile, line) {
+			if (this.processor === undefined){
+				this.processor = line.indexOf("NULL") !== -1?this.ibm:this.openJDK;
+			}
+			this.processor.notify(fsFile, line);
+		}
+	}
+
+	class IbmThreadDumpProcessor extends PassThroughStream{
+		constructor() {
+			super("IbmThreadDumpProcessor");
+		}
+	}
+	class OpenJdkThreadDumpProcessor extends PassThroughStream{
+		constructor() {
+			super("OpenJdkThreadDumpProcessor");
+		}
+	}
+
+	const THREADINFO_EXTRACTOR$1 = /^\"(?<name>.*?)\"[\s]*(?<id>#[\d]*?)[\s]*(?<isdaemon>[daemon].*?)?[\s]*prio=(?<priority>[\d]*)[\s]*os_prio=(?<os_priority>[\d]*)[\s]*cpu=(?<cpu>.*?)[\s]*elapsed=(?<elapsed>.*?)[\s]*tid=(?<tid>.*?)[\s]*nid=(?<nid>.*?)\s(?<status>.*?)\[(?<memref>.*?)\]/;
+	const THREAD_STATE_EXTRACTOR = /java\.lang\.Thread\.State:[\s]*(?<state>[\w]*)[\s]*[(]?(?<state_info>.*?)[)]?$/;
+	class OpenJDKThreadBuilder extends PassThroughStream {
+		constructor(eventPublisher) {
+			super("OpenJDKThreadBuilder");
+			this.thread = undefined;
+			this.sendEvent = eventPublisher;
+		}
+
+		process(fsFile, line) {
+
+			if(line === undefined || line.trim() === ""){
+				let thread = this.thread;
+				if(thread){
+					let stack = thread.stack;
+					delete thread.stack;
+					this.sendEvent({msg:"updateThread",data:{type:'OPENJDK',file:fsFile,body:{name:thread.name,info:thread,stack}}});
+					this.thread = undefined;
+				}
+			}
+			let threadInfoResult = THREADINFO_EXTRACTOR$1.exec(line);
+			if(threadInfoResult){
+				let { groups } = threadInfoResult;
+				if (groups) {
+					this.updateThread(threadInfoResult.groups);
+				}
+			}
+			else if(this.thread){
+				let threadStateResult = THREAD_STATE_EXTRACTOR.exec(line.trim());
+				if(threadStateResult){
+					let { groups } = threadStateResult;
+					if (groups) {
+						this.updateThread(threadStateResult.groups);
+					}
+				}else {
+					this.updateThread({stack:[line.trim()]});
+				}
+			}
+		}
+		updateThread(thread){
+			let newThread = {
+				...this.thread,
+				...thread
+			};
+			if(thread.info){
+				newThread.info =  {
+					...this.thread.info,
+					...thread.info
+				};
+			}
+			if(thread.stack){
+				newThread.stack =  [...(this.thread.stack)?this.thread.stack:[],...thread.stack];
+			}
+			if(thread.locks){
+				newThread.locks =  [...(this.thread.locks)?this.thread.locks:[],...thread.locks];
+			}
+			this.thread = newThread;
+
+		}
+	}
+
 	self.addEventListener('message',function({data:{file}}){
 		console.log("worker data received", file);
 		let processor = new Processor(self);
@@ -405,19 +480,26 @@
 
 		async processFile(fsFile) {
 			let lineProcessor = new LineProcessor();
-			let lineFilter = new LineFilter();
-			let threadBuilder = new ThreadBuilder(this.eventPublisher.bind(this));
-			let deadLockBuilder = new DeadLockBuilder(this.eventPublisher.bind(this));
-			let lockMonitorBuilder = new LockMonitorBuilder(this.eventPublisher.bind(this));
+			let ibmLineFilter = new IBMLineFilter();
+			let ibmThreadBuilder = new IBMThreadBuilder(this.eventPublisher.bind(this));
+			let ibmDeadLockBuilder = new IBMDeadLockBuilder(this.eventPublisher.bind(this));
+			let ibmLockMonitorBuilder = new IBMLockMonitorBuilder(this.eventPublisher.bind(this));
 
-			lineProcessor.subscribe(lineFilter);
-			lineFilter.subscribe(threadBuilder, deadLockBuilder, lockMonitorBuilder);
+			let openJDKThreadBuilder = new OpenJDKThreadBuilder(this.eventPublisher.bind(this));
+
+			let jTypeDetector = new JTypeDetectorProcessor();
+
+			lineProcessor.subscribe(jTypeDetector);
+
+			jTypeDetector.ibm.subscribe(ibmLineFilter);
+			jTypeDetector.openJDK.subscribe(openJDKThreadBuilder);
+
+			ibmLineFilter.subscribe(ibmThreadBuilder, ibmDeadLockBuilder, ibmLockMonitorBuilder);
 
 			let fileStream = fsFile.stream();
 			await fileStream.pipeTo(
 				new WritableStream({
 					write: (value) => {
-						//console.log(fsFile, value)
 						try {
 							lineProcessor.process(fsFile, value);
 						} catch (err) {
