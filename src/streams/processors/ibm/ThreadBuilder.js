@@ -1,4 +1,4 @@
-import { PassThroughStream } from "../PassThroughStream";
+import { PassThroughStream } from "../../PassThroughStream";
 // import { Thread } from "../../types/Thread";
 // import { ThreadStore } from "../../stores/ThreadStore";
 
@@ -20,7 +20,7 @@ const INT_THREAD_TYPES = {
 
 export const THREAD_TYPES = Object.values(INT_THREAD_TYPES);
 
-export class ThreadBuilder extends PassThroughStream {
+export class IBMThreadBuilder extends PassThroughStream {
 	constructor(eventPublisher) {
 		super("ThreadBuilder");
 		this.threadName = undefined;
@@ -30,10 +30,8 @@ export class ThreadBuilder extends PassThroughStream {
 	}
 	updateThread(fsFile, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking}){
 		let thread = this.thread;
-		// console.log("thread", this.thread,this.thread.name,name,this.thread.name !== undefined && this.thread.name !== name);
 		if(this.thread.name !== name){
-			console.log("thread", this.thread);
-			this.sendEvent({msg:"updateThread",data:{file:fsFile,body:thread}});
+			this.sendEvent({msg:"updateThread",data:{type:'IBM',file:fsFile,body:thread}});
 			thread = {name:name};
 		}
 

@@ -1,4 +1,4 @@
-import { PassThroughStream } from "../PassThroughStream";
+import { PassThroughStream } from "../../PassThroughStream";
 //import { ThreadStore } from "../../stores/ThreadStore";
 
 const MONOBJECT_EXTRACTOR = /(?<monitor>.*?):.*?owner\s\"(?<owner>.*?)\"/;
@@ -30,7 +30,7 @@ export const LOCK_TYPES = [
 ];
 
 
-export class LockMonitorBuilder extends PassThroughStream {
+export class IBMLockMonitorBuilder extends PassThroughStream {
 	constructor(eventPublisher) {
 		super("LockMonitorBuilder");
 		this.lkMonitorsStarted = false;
@@ -38,7 +38,7 @@ export class LockMonitorBuilder extends PassThroughStream {
 		this.sendEvent = eventPublisher;
 	}
 	updateThread(fsFile, message){
-		this.sendEvent({msg:"updateThread",data:{file:fsFile,body:message}})
+		this.sendEvent({msg:"updateThread",data:{type:'IBM',file:fsFile,body:message}})
 	}
 	process(fsFile, { type, content }) {
 			if (START_LOCKMON === type) {

@@ -3,6 +3,7 @@
   import ThreadStates from "./ThreadStates.svelte";
 
   export let fileStore;
+  export let threadStore;
 </script>
 
 <style>
@@ -10,6 +11,6 @@
 </style>
 
 <div class="sidebar">
-  <ThreadStates loaded={fileStore && Object.keys(fileStore).length > 0} />
+  <ThreadStates type={threadStore.type} loaded={fileStore && Object.keys(fileStore).length > 0} />
   <FileLoader />
 </div>

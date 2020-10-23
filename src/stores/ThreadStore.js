@@ -5,7 +5,7 @@ import { Thread } from "../types/Thread";
 
 class TStore {
 	constructor() {
-		const { subscribe, set, update } = writable({});
+		const { subscribe, set, update } = writable({files:{}});
 		this.subscribe = subscribe;
 		this.set = set;
 		this.update = update;
@@ -22,7 +22,7 @@ class TStore {
 	 * @param {*} fsFile
 	 * @param {*} param1
 	 */
-	updateThread(fsFile, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking}) {
+	updateThread(fsFile, type, {name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking}) {
 		this.update((oldThreadStore) => {
 			//console.log("update",{name,info,javalThreadInfo,nativeInfo,stack,nativeStack,monitor, waitingOn,blockedBy,blocking})
 			/*
@@ -44,17 +44,23 @@ class TStore {
 
 			}
 			*/
+
+
 			let newStore = {
 				...oldThreadStore,
-				[fsFile.name]:{
-					...(oldThreadStore[fsFile.name])? oldThreadStore[fsFile.name] : {},
-					[name]:{
-						...( oldThreadStore[fsFile.name] && oldThreadStore[fsFile.name][name])? oldThreadStore[fsFile.name][name] : {},
-						name,
+				type:type,
+				files:{
+					...oldThreadStore.files,
+					[fsFile.name]:{
+						...(oldThreadStore.files[fsFile.name])? oldThreadStore.files[fsFile.name] : {},
+						[name]:{
+							...( oldThreadStore.files[fsFile.name] && oldThreadStore.files[fsFile.name][name])? oldThreadStore.files[fsFile.name][name] : {},
+							name,
+						}
 					}
 				}
 			};
-			let thread = newStore[fsFile.name][name];
+			let thread = newStore.files[fsFile.name][name];
 
 			if(info){
 				thread.info = {...thread.info, ...info}
@@ -86,18 +92,6 @@ class TStore {
 			return newStore;
 		});
 	}
-
-
-	mergeThread(){
-
-	}
-	mergeThreadInfo(){}
-
-	mergeThreadStack(){}
-	mergeThreadNativeStack(){}
-	mergeThreadBlocking(){}
-	mergeThreadNativeStack(){}
-
 
 	remove(fileName) {
 		this.update((oldThreadStore) => {

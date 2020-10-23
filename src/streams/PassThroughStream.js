@@ -9,17 +9,10 @@ export class PassThroughStream {
 			this.notify(...arguments);
 		} catch (err) {
 			console.error(err);
-			// try {
-			// 	this.subscribers.forEach((subscriber) => subscriber.error(err));
-			// } catch (e) {
 			throw err;
-			// }
 		}
 	}
 
-	// error(err) {
-	// 	this.subscribers.forEach((subscriber) => subscriber.error(result));
-	// }
 	notify() {
 		this.subscribers.forEach((subscriber) => {
 			return subscriber.process(...arguments);

@@ -1,4 +1,4 @@
-import { PassThroughStream } from "../PassThroughStream";
+import { PassThroughStream } from "../../PassThroughStream";
 import { THREAD_TYPES } from "./ThreadBuilder";
 import { LOCK_TYPES } from "./LockMonitorBuilder";
 import { DEAD_LOCK_TYPES } from "./DeadLockBuilder";
@@ -7,7 +7,7 @@ const TYPE_EXTRACTOR = /^(?<type>.*?)\s[\s]*(?<content>.*)/;
 
 const DESIRED_TYPES = [...THREAD_TYPES, ...LOCK_TYPES, ...DEAD_LOCK_TYPES];
 
-export class LineFilter extends PassThroughStream {
+export class IBMLineFilter extends PassThroughStream {
 	constructor() {
 		super("LineFilter");
 	}

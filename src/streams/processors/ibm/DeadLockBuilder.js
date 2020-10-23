@@ -1,4 +1,4 @@
-import { PassThroughStream } from "../PassThroughStream";
+import { PassThroughStream } from "../../PassThroughStream";
 
 const START_DEADLOCK = "1LKDEADLOCK";
 const END_DEADLOCK = "1LKDEADLOCK";
@@ -14,7 +14,7 @@ export const DEAD_LOCK_TYPES = [
 	END_DEADLOCK,
 ];
 
-export class DeadLockBuilder extends PassThroughStream {
+export class IBMDeadLockBuilder extends PassThroughStream {
 	constructor(eventPublisher) {
 		super("LockBuilder");
 		this.thread = {};
@@ -22,7 +22,7 @@ export class DeadLockBuilder extends PassThroughStream {
 		this.sendEvent = eventPublisher;
 	}
 	updateThread(fsFile, message){
-		this.sendEvent({msg:"updateThread",data:{file:fsFile,body:message}})
+		this.sendEvent({msg:"updateThread",data:{type:'IBM',file:fsFile,body:message}})
 	}
 	process(fsFile, { type, content }) {
 		//try {

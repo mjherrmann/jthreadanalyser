@@ -7,7 +7,6 @@ export class LineProcessor extends PassThroughStream {
 		this.dataArr = [];
 	}
 	process(fsFile, chunk) {
-		// try {
 		this.dataArr = this.dataArr.concat(Array.from(chunk));
 		let nextIndex = this.newLineIndex();
 		while (nextIndex != -1) {
@@ -16,10 +15,6 @@ export class LineProcessor extends PassThroughStream {
 			this.notify(fsFile, decoded);
 			nextIndex = this.newLineIndex();
 		}
-		// } catch (e) {
-		// 	console.error("Error Reading", e);
-		// 	this.close();
-		// }
 	}
 	newLineIndex() {
 		return this.dataArr.findIndex((i) => i === 10 || i === 13);

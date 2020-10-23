@@ -4,6 +4,7 @@
 
   export let threads;
   export let threadName;
+  export let threadType;
 
   let showDetails = false;
 </script>
@@ -35,7 +36,7 @@
     }}>
     <div style="overflow:hidden;" />
     {#each threads as t, index}
-      <ThreadDetails thread={t} />
+      	<ThreadDetails thread={t} />
     {/each}
   </div>
 {/if}

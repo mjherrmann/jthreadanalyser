@@ -1,8 +1,10 @@
 import { LineProcessor } from "../streams/processors/LineProcessor";
-import { DeadLockBuilder } from "../streams/processors/DeadLockBuilder";
-import { LockMonitorBuilder } from "../streams/processors/LockMonitorBuilder";
-import { ThreadBuilder } from "../streams/processors/ThreadBuilder";
-import { LineFilter } from "../streams/processors/LineFilter";
+import { IBMDeadLockBuilder } from "../streams/processors/ibm/DeadLockBuilder";
+import { IBMLockMonitorBuilder } from "../streams/processors/ibm/LockMonitorBuilder";
+import { IBMThreadBuilder } from "../streams/processors/ibm/ThreadBuilder";
+import { IBMLineFilter } from "../streams/processors/ibm/LineFilter";
+import { JTypeDetectorProcessor } from "../streams/processors/JTypeDetectorProcessor";
+import {OpenJDKThreadBuilder} from "../streams/processors/openjdk/ThreadBuilder";
 
 self.addEventListener('message',function({data:{file}}){
 	console.log("worker data received", file);
@@ -19,19 +21,26 @@ class Processor{
 
 	async processFile(fsFile) {
 		let lineProcessor = new LineProcessor();
-		let lineFilter = new LineFilter();
-		let threadBuilder = new ThreadBuilder(this.eventPublisher.bind(this));
-		let deadLockBuilder = new DeadLockBuilder(this.eventPublisher.bind(this));
-		let lockMonitorBuilder = new LockMonitorBuilder(this.eventPublisher.bind(this));
+		let ibmLineFilter = new IBMLineFilter();
+		let ibmThreadBuilder = new IBMThreadBuilder(this.eventPublisher.bind(this));
+		let ibmDeadLockBuilder = new IBMDeadLockBuilder(this.eventPublisher.bind(this));
+		let ibmLockMonitorBuilder = new IBMLockMonitorBuilder(this.eventPublisher.bind(this));
 
-		lineProcessor.subscribe(lineFilter);
-		lineFilter.subscribe(threadBuilder, deadLockBuilder, lockMonitorBuilder);
+		let openJDKThreadBuilder = new OpenJDKThreadBuilder(this.eventPublisher.bind(this));
+
+		let jTypeDetector = new JTypeDetectorProcessor();
+
+		lineProcessor.subscribe(jTypeDetector);
+
+		jTypeDetector.ibm.subscribe(ibmLineFilter);
+		jTypeDetector.openJDK.subscribe(openJDKThreadBuilder);
+
+		ibmLineFilter.subscribe(ibmThreadBuilder, ibmDeadLockBuilder, ibmLockMonitorBuilder);
 
 		let fileStream = fsFile.stream();
 		await fileStream.pipeTo(
 			new WritableStream({
 				write: (value) => {
-					//console.log(fsFile, value)
 					try {
 						lineProcessor.process(fsFile, value);
 					} catch (err) {

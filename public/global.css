@@ -70,28 +70,28 @@ button:focus {
 	border-color: #666;
 }
 
-.B {
+.B, .BLOCKED{
 	background-color: rgb(255, 0, 0, 0.7);
 	border: 1px solid rgb(180, 0, 0, 1);
 }
-.CW {
+.CW, .WAITING {
 	background-color: rgb(0, 0, 255, 0.2);
 	border: 1px solid rgb(0, 0, 255, 00.7);
 }
-.P {
+.P, .TIMED_WAITING {
 	/* background-color: rgb(255, 0, 0, 0.7); */
 	background-color: rgb(255, 255, 0, 0.5);
 	border: 1px solid rgb(255, 0, 0, 1);
 }
-.R {
+.R, .RUNNABLE {
 	background-color: rgb(0, 124, 0, 0.2);
 	border: 1px solid rgb(0, 124, 0, 0.5);
 }
-.Z {
+.Z, .TERMINATED {
 	background-color: rgb(0, 0, 0, 0.5);
 	border: 1px solid rgb(255, 0, 0, 1);
 }
-.S {
+.S, .NEW {
 	background-color: rgb(255, 128, 0, 0.5);
 	border: 1px solid rgb(255, 0, 0, 1);
 }

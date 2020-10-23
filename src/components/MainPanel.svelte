@@ -38,10 +38,11 @@
   let threadFilterChange = evt => {
     threadFilter = evt.target.value;
   };
-  $: fileNames = $ThreadStore ? Object.keys($ThreadStore).sort() : [];
-  $: threadNames = $ThreadStore
+  $: threadType = $ThreadStore.type;
+  $: fileNames = ($ThreadStore && $ThreadStore.files)? Object.keys($ThreadStore.files).sort() : [];
+  $: threadNames = ($ThreadStore && $ThreadStore.files)
     ? Object.keys(
-        Object.entries($ThreadStore).reduce((reduced, [fileName, threads]) => {
+        Object.entries($ThreadStore.files).reduce((reduced, [fileName, threads]) => {
           return Object.assign({}, reduced, threads);
         }, {})
       )
@@ -55,7 +56,7 @@
 
   let getThreads = threadName => {
     let ts = fileNames.map(fileName => {
-      return $ThreadStore[fileName] && $ThreadStore[fileName][threadName];
+      return $ThreadStore.files[fileName] && $ThreadStore.files[fileName][threadName];
     });
     return ts;
   };
@@ -109,7 +110,7 @@
       </ClosableTab>
     {/each}
     {#each threadNames as threadname}
-      <ThreadRow threadName={threadname} threads={getThreads(threadname)} />
+      <ThreadRow threadType={threadType} threadName={threadname} threads={getThreads(threadname)} />
     {/each}
   </div>
 </div>

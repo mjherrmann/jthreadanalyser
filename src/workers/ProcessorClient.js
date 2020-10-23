@@ -1,8 +1,8 @@
+import {ThreadStore} from "../stores/ThreadStore"
 export class ProcessorClient{
 
 	constructor(threadStore){
 		this.worker = new Worker('build/worker_processor.js')
-		this.threadStore = threadStore;
 		this.intPromise = new Promise((resolve, reject)=>{
 			this.resolve = resolve;
 			this.reject = reject;
@@ -12,19 +12,13 @@ export class ProcessorClient{
 
 	processFile(fsFile){
 		this.worker.postMessage({file:fsFile});
-		console.log(this);
 		return this.intPromise;
 	}
 
-	// processedListener(resolve, reject){
-	// 	this.resolve = resolve;
-	// 	this.reject = reject;
-	// }
-
-	msgListener({data:{msg,data:{file,body}}}){
+	msgListener({data:{msg,data:{type,file,body}}}){
 		//console.log("msgCameBack", msg,file,body);
 		if(msg === 'updateThread'){
-			this.threadStore.updateThread(file, body);
+			ThreadStore.updateThread(file, type, body);
 		}
 	}
 

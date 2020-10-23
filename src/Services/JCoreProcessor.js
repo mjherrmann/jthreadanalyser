@@ -1,15 +1,6 @@
-import { getContext } from "svelte";
 import { FileStore } from "../stores/FileStore";
-import {ThreadStore} from "../stores/ThreadStore"
-import { LineProcessor } from "../streams/processors/LineProcessor";
-import { DeadLockBuilder } from "../streams/processors/DeadLockBuilder";
-import { LockMonitorBuilder } from "../streams/processors/LockMonitorBuilder";
-import { ThreadBuilder } from "../streams/processors/ThreadBuilder";
-import { LineFilter } from "../streams/processors/LineFilter";
-import { FileReadService } from "./FileReadService";
-import {ProcessorClient} from "../workers/ProcessorClient";
 
-const BUFFER_SIZE = 20 * 1024;
+import {ProcessorClient} from "../workers/ProcessorClient";
 
 export class JCoreProcessor {
 	constructor() {
@@ -30,11 +21,8 @@ export class JCoreProcessor {
 					.then((fsFiles) => {
 						return Promise.all(
 							fsFiles.map((fsFile) => {
-
-								let pc = new ProcessorClient(ThreadStore);
+								let pc = new ProcessorClient();
 								return pc.processFile(fsFile);
-
-								return this.processFile(fsF);
 							})
 						);
 					})
@@ -46,7 +34,3 @@ export class JCoreProcessor {
 	}
 
 }
-
-//split the files to manageable chunks.
-//read the chunks line by line -- join the edges of the chunks where required
-//as we read the file build the thread tree
