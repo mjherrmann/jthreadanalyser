@@ -1,7 +1,7 @@
 import { PassThroughStream } from "../../PassThroughStream";
 //import { ThreadStore } from "../../stores/ThreadStore";
 
-const MONOBJECT_EXTRACTOR = /(?<monitor>.*?):.*?owner\s\"(?<owner>.*?)\"/;
+const MONOBJECT_EXTRACTOR = /(?<monitor>.*?):.*?(?:owner\s\"|<)(?<owner>.*?)(?:\"|>)/;
 const WAITER_EXTRACTOR = /\"(?<thread>.*?)\"\s\((?<threadId>.*?)\)/
 const WAITNOTIFY_EXTRACTOR = /\"(?<thread>.*?)\"\s\((?<threadId>.*?)\)/
 
@@ -66,12 +66,10 @@ export class IBMLockMonitorBuilder extends PassThroughStream {
 	}
 
 	buildLock(fsFile, type, content) {
+
 		let result = undefined;
 		let {owner, monitor} = (this.monObj)?this.monObj:{undefined,undefined};
 		switch (type) {
-			// case INT_LOCK_TYPES.MONINUSE:
-			// 	//new owner - delete the current one
-			// 	delete this.monObj;
 			case INT_LOCK_TYPES.MONOBJECT:
 				result = MONOBJECT_EXTRACTOR.exec(content);
 				if (result) {
@@ -112,21 +110,6 @@ export class IBMLockMonitorBuilder extends PassThroughStream {
 					}
 				}
 				break;
-			// case INT_THREAD_TYPES.JAVALTHREAD:
-			// 	result = JAVALTREAD_EXTRACTOR.exec(content);
-			// 	if (result) {
-			// 		let { groups } = result;
-			// 		ThreadStore.updateThread(fsFile,{ name: this.threadName,javalThreadInfo:groups })
-			// 	}
-			// 	break;
-			// case INT_THREAD_TYPES.STACKTRACE4:
-			// case INT_THREAD_TYPES.STACKTRACE5:
-			// 	ThreadStore.updateThread(fsFile,{ name: this.threadName,stack:[content]})
-			// 	//this.thread.addToStack(content);
-			// 	break;
-			// case INT_THREAD_TYPES.NATIVESTACK:
-			// 	ThreadStore.updateThread(fsFile,{ name: this.threadName,nativeStack:[content] })
-			// 	break;
 		}
 	}
 

@@ -4,7 +4,6 @@
 
   export let threads;
   export let threadName;
-  export let threadType;
 
   let showDetails = false;
 </script>

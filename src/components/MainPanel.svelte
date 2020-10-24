@@ -110,7 +110,7 @@
       </ClosableTab>
     {/each}
     {#each threadNames as threadname}
-      <ThreadRow threadType={threadType} threadName={threadname} threads={getThreads(threadname)} />
+      <ThreadRow threadName={threadname} threads={getThreads(threadname)} />
     {/each}
   </div>
 </div>

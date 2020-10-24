@@ -1,6 +1,6 @@
 <script>
   export let thread;
-
+	console.log("display",thread);
 </script>
 
 <style>
